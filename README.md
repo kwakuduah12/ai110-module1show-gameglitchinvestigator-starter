@@ -38,7 +38,7 @@ It wrote the code, ran away, and now the game is unplayable.
 - [x] Explain what fixes you applied.
   1. **Hint messages** — swapped the return strings in `check_guess()` in `logic_utils.py` so `guess > secret` returns `"📈 Go LOWER!"` and `guess < secret` returns `"📉 Go HIGHER!"`.
   2. **Attempts display** — moved the `st.info()` call to after the submit button is defined and added `(1 if submit else 0)` to `display_attempts` so the counter reflects the attempt that is about to be counted.
-  3. **New Game reset** — added `st.session_state.history = []`, `st.session_state.status = "playing"`, and `st.session_state.score = 0` to the `new_game` block so all relevant state is cleared together before the rerun.
+  3. **New Game reset** — added `st.session_state.history = []`, `st.session_state.status = "playing"`, and `st.session_state.score = 0` to the `new_game` block so all relevant state is cleared together before any rerun.
 
 ## 📸 Demo
 
