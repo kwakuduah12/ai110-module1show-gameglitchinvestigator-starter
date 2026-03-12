@@ -48,8 +48,13 @@ Yes. After fixing the hint bug I asked the AI to suggest tests that would catch 
 ## 4. What did you learn about Streamlit and state?
 
 - In your own words, explain why the secret number kept changing in the original app.
+Every time a user interacts with the app — clicking a button, typing in an input — Streamlit reruns the entire Python script from top to bottom. In the broken version, `random.randint(low, high)` was called unconditionally at the top of the script, so every rerun produced a brand-new secret number. There was nothing storing the original value between reruns, so the target kept shifting every time the player submitted a guess.
+
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+Imagine your app is a recipe that gets cooked fresh every time someone clicks anything. Every variable you create gets thrown away and remade from scratch on each click. Session state is like a sticky note you attach to the fridge — values you write there survive between cooks. So if you want something to stay the same across interactions, you have to write it to `st.session_state` the first time and read it back on every subsequent rerun instead of recreating it.
+
 - What change did you make that finally gave the game a stable secret number?
+The fix was wrapping the `random.randint()` call in an `if "secret" not in st.session_state:` guard. On the very first run, the secret is generated and stored in `st.session_state.secret`. On every rerun after that, the condition is false so the line is skipped and the same secret number is used for the entire game.
 
 ---
 
@@ -57,5 +62,10 @@ Yes. After fixing the hint bug I asked the AI to suggest tests that would catch 
 
 - What is one habit or strategy from this project that you want to reuse in future labs or projects?
   - This could be a testing habit, a prompting strategy, or a way you used Git.
+Using the Developer Debug Info expander to watch live session state while clicking through the app was invaluable. It let me see the exact value of `secret`, `attempts`, `status`, and `history` on every render without adding print statements or restarting anything. In future projects I want to build a similar lightweight debug panel early so I'm never guessing what the app's internal state actually is.
+
 - What is one thing you would do differently next time you work with AI on a coding task?
+I would verify each AI suggestion against the full relevant code block before applying it, rather than applying the fix and discovering it was incomplete only after seeing new symptoms. The partial new-game reset was a good lesson — the AI saw one variable that needed resetting and missed two others right next to it, which I would have caught if I had re-read the whole `new_game` block alongside the suggestion.
+
 - In one or two sentences, describe how this project changed the way you think about AI generated code.
+I used to assume AI-generated code was either fully correct or obviously broken, but this project showed me it can be subtly wrong in ways that look reasonable at first glance. I now treat AI output as a strong first draft that still needs to be read line by line and tested the same way I would test anything I wrote myself.
