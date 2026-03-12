@@ -42,8 +42,9 @@ It wrote the code, ran away, and now the game is unplayable.
 
 ## 📸 Demo
 
-- ![Winning game screenshot ] (demo.png)
+- ![Winning game screenshot ](demo.png)
+- ![Pytest results](pytest_results.png)
 
 ## 🚀 Stretch Features
 
-- [ ] [If you choose to complete Challenge 4, insert a screenshot of your Enhanced Game UI here]
+- ![Enhanced Game UI](enhanced_ui.png) 

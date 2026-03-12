@@ -42,6 +42,9 @@ if "status" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
+if "history_details" not in st.session_state:
+    st.session_state.history_details = []
+
 st.subheader("Make a guess")
 
 with st.expander("Developer Debug Info"):
@@ -80,6 +83,7 @@ if new_game:
     # history kept accumulating across games, status caused st.stop() to block the new game
     # immediately, and score carried over from the previous game instead of starting fresh.
     st.session_state.history = []
+    st.session_state.history_details = []
     st.session_state.status = "playing"
     st.session_state.score = 0
     st.success("New game started.")
@@ -110,8 +114,35 @@ if submit:
 
         outcome, message = check_guess(guess_int, secret)
 
+        # Hot/Cold proximity indicator (uses real secret int for accurate distance)
+        diff = abs(guess_int - st.session_state.secret)
+        if outcome == "Win":
+            proximity = "🎯 Exact!"
+        elif diff <= 3:
+            proximity = "🔥 On fire!"
+        elif diff <= 10:
+            proximity = "♨️ Hot"
+        elif diff <= 20:
+            proximity = "🌡️ Warm"
+        elif diff <= 40:
+            proximity = "🧊 Cold"
+        else:
+            proximity = "❄️ Freezing"
+
+        st.session_state.history_details.append({
+            "Attempt": st.session_state.attempts,
+            "Guess": guess_int,
+            "Result": outcome,
+            "Proximity": proximity,
+        })
+
         if show_hint:
-            st.warning(message)
+            if outcome == "Win":
+                st.success(f"{message}  {proximity}")
+            elif outcome == "Too High":
+                st.error(f"{message}  {proximity}")
+            else:
+                st.info(f"{message}  {proximity}")
 
         st.session_state.score = update_score(
             current_score=st.session_state.score,
@@ -134,6 +165,15 @@ if submit:
                     f"The secret was {st.session_state.secret}. "
                     f"Score: {st.session_state.score}"
                 )
+
+if st.session_state.history_details:
+    st.divider()
+    st.subheader("📊 Session Summary")
+    st.dataframe(
+        st.session_state.history_details,
+        use_container_width=True,
+        hide_index=True,
+    )
 
 st.divider()
 st.caption("Built by an AI that claims this code is production-ready.")

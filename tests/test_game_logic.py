@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+import pytest
 from logic_utils import check_guess, parse_guess
 
 
@@ -79,3 +80,86 @@ def test_non_numeric_input_is_rejected():
     ok, _, error = parse_guess("abc")
     assert ok is False
     assert error is not None
+
+
+# --- Edge case: negative numbers should be rejected ---
+# parse_guess currently accepts negative integers because they pass the decimal
+# and int() checks. The game range starts at 1, so negatives are never valid.
+
+@pytest.mark.xfail(reason="parse_guess does not yet reject negative numbers")
+def test_negative_number_is_rejected():
+    ok, value, error = parse_guess("-1")
+    assert ok is False, "Negative input should be rejected"
+    assert value is None
+    assert error is not None
+
+@pytest.mark.xfail(reason="parse_guess does not yet reject negative numbers")
+def test_negative_number_has_clear_message():
+    _, _, error = parse_guess("-1")
+    assert error is not None, "Error message should explain why the input is invalid"
+
+@pytest.mark.xfail(reason="parse_guess does not yet reject negative numbers")
+def test_large_negative_is_rejected():
+    ok, _, _ = parse_guess("-999")
+    assert ok is False, "Large negative input should also be rejected"
+
+
+# --- Edge case: out-of-range large numbers should be rejected ---
+# parse_guess currently accepts integers above 100 with no upper-bound check.
+# Guessing 200 in a 1-100 game should return an error, not silently proceed.
+
+@pytest.mark.xfail(reason="parse_guess does not yet reject out-of-range numbers")
+def test_number_above_range_is_rejected():
+    ok, value, error = parse_guess("200")
+    assert ok is False, "Numbers above the valid range should be rejected"
+    assert value is None
+    assert error is not None
+
+@pytest.mark.xfail(reason="parse_guess does not yet reject out-of-range numbers")
+def test_number_above_range_has_clear_message():
+    _, _, error = parse_guess("200")
+    assert error is not None, "Error message should explain the valid range"
+
+def test_boundary_value_100_is_accepted():
+    # 100 is the top of the Normal range — it should still be valid
+    ok, value, error = parse_guess("100")
+    assert ok is True
+    assert value == 100
+    assert error is None
+
+def test_boundary_value_1_is_accepted():
+    # 1 is the bottom of the range — it should still be valid
+    ok, value, error = parse_guess("1")
+    assert ok is True
+    assert value == 1
+    assert error is None
+
+
+# --- Edge case: string secret causes wrong hint on even-numbered attempts ---
+# In app.py, secret is cast to str on even attempts before being passed to
+# check_guess. String comparison is lexicographic: "9" > "50" is True because
+# "9" > "5", so a guess of 9 against secret "50" incorrectly returns "Too High".
+
+@pytest.mark.xfail(reason="check_guess uses lexicographic comparison when secret is a string")
+def test_string_secret_low_guess_returns_too_low():
+    # 9 < 50 — outcome must be "Too Low" regardless of secret type
+    outcome, _ = check_guess(9, "50")
+    assert outcome == "Too Low", (
+        f"check_guess(9, '50') should return 'Too Low' but got '{outcome}'. "
+        "This fails due to lexicographic string comparison: '9' > '5'."
+    )
+
+@pytest.mark.xfail(reason="check_guess uses lexicographic comparison when secret is a string")
+def test_string_secret_low_guess_hint_directs_higher():
+    # Player guessed too low — hint must say go HIGHER
+    _, message = check_guess(9, "50")
+    assert "HIGHER" in message, (
+        f"Hint for guess 9 vs secret '50' should say HIGHER, got: {message}"
+    )
+
+def test_string_secret_high_guess_returns_too_high():
+    # 80 > 50 — outcome must be "Too High" regardless of secret type
+    outcome, _ = check_guess(80, "50")
+    assert outcome == "Too High", (
+        f"check_guess(80, '50') should return 'Too High' but got '{outcome}'."
+    )
